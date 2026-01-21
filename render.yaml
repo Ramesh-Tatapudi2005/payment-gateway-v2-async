@@ -1,0 +1,54 @@
+# 1. Database Definition
+databases:
+  - name: gateway-db-prod
+    databaseName: payment_gateway
+    user: gateway_user
+    plan: free
+    region: ohio 
+
+# 2. Services Definition
+services:
+  - type: web
+    name: gateway-api-service
+    env: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    region: ohio 
+    envVars:
+      - key: DATABASE_URL
+        # We set sync to false so you can manually paste the EXTERNAL URL
+        # into the Render Dashboard. This is the most reliable method.
+        sync: false 
+      - key: PORT
+        value: "8000"
+      - key: TEST_MODE
+        value: "true"
+      - key: TEST_PAYMENT_SUCCESS
+        value: "true"
+      - key: TEST_PROCESSING_DELAY
+        value: "1000"
+      - key: MERCHANT_API_KEY
+        value: key_test_abc123
+      - key: MERCHANT_API_SECRET
+        value: secret_test_xyz789
+
+  - type: web
+    name: merchant-dashboard-ui
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://gateway-api-service.onrender.com
+
+  - type: web
+    name: checkout-page-ui
+    runtime: static
+    rootDir: checkout-page
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://gateway-api-service.onrender.com

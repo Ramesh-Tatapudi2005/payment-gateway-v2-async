@@ -1,0 +1,51 @@
+version: "2.0"
+# Configuration for automated evaluation of Task 7.1
+
+setup:
+  # Commands to prepare the environment
+  command: |
+    docker-compose down -v
+    docker-compose build
+
+start:
+  # Command to launch all services including Redis and Workers
+  command: docker-compose up -d
+
+verify:
+  # Health checks and endpoint validation for automated testing
+  endpoints:
+    - name: API Gateway Status
+      url: http://localhost:8000/api/v1/test/jobs/status
+      method: GET
+      expected_status: 200
+    
+    - name: Merchant Dashboard
+      url: http://localhost:3000
+      method: GET
+      expected_status: 200
+
+    - name: Checkout Page
+      url: http://localhost:3001
+      method: GET
+      expected_status: 200
+
+    - name: SDK Bundle
+      url: http://localhost:3001/checkout.js
+      method: GET
+      expected_status: 200
+
+  # Environment variable check for evaluation logic
+  env_vars:
+    - TEST_MODE
+    - WEBHOOK_RETRY_INTERVALS_TEST
+    - REDIS_URL
+
+# Test Configuration for Asynchronous Logic
+environment:
+  TEST_MODE: "true"
+  TEST_PROCESSING_DELAY: "1000"
+  WEBHOOK_RETRY_INTERVALS_TEST: "true"
+
+shutdown:
+  # Graceful teardown of services
+  command: docker-compose down -v

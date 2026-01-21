@@ -1,0 +1,106 @@
+{
+	"info": {
+		"name": "Payment Gateway API - Final",
+		"description": "Comprehensive suite for testing Public and Private Payment Gateway flows.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Private - Create Order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"if (jsonData.id) {",
+							"    pm.environment.set(\"order_id\", jsonData.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "X-Api-Key", "value": "key_test_abc123" },
+					{ "key": "X-Api-Secret", "value": "secret_test_xyz789" },
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"amount\": 50000,\n    \"currency\": \"INR\",\n    \"receipt\": \"order_rcpt_final_001\"\n}"
+				},
+				"url": { "raw": "http://localhost:8000/api/v1/orders" }
+			}
+		},
+		{
+			"name": "2. Public - Get Order Details",
+			"request": {
+				"method": "GET",
+				"url": { "raw": "http://localhost:8000/api/v1/orders/{{order_id}}/public" }
+			}
+		},
+		{
+			"name": "3. Public - Process Card (Success)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"if (jsonData.id) {",
+							"    pm.environment.set(\"payment_id\", jsonData.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"order_id\": \"{{order_id}}\",\n    \"method\": \"card\",\n    \"card\": {\n        \"number\": \"4111111111111111\",\n        \"expiry_month\": \"12\",\n        \"expiry_year\": \"2028\",\n        \"cvv\": \"123\",\n        \"holder_name\": \"Ramesh Tatapudi\"\n    }\n}"
+				},
+				"url": { "raw": "http://localhost:8000/api/v1/payments/public" }
+			}
+		},
+		{
+			"name": "4. Public - Process Card (Luhn Failure)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"order_id\": \"{{order_id}}\",\n    \"method\": \"card\",\n    \"card\": {\n        \"number\": \"4111111111111112\",\n        \"expiry_month\": \"12\",\n        \"expiry_year\": \"2028\",\n        \"cvv\": \"123\",\n        \"holder_name\": \"Ramesh Tatapudi\"\n    }\n}"
+				},
+				"url": { "raw": "http://localhost:8000/api/v1/payments/public" }
+			}
+		},
+		{
+			"name": "5. Public - Get Status (Polling)",
+			"request": {
+				"method": "GET",
+				"url": { "raw": "http://localhost:8000/api/v1/payments/{{payment_id}}/public" }
+			}
+		},
+		{
+			"name": "6. Private - List All Merchant Payments",
+			"request": {
+				"method": "GET",
+				"header": [
+					{ "key": "X-Api-Key", "value": "key_test_abc123" },
+					{ "key": "X-Api-Secret", "value": "secret_test_xyz789" }
+				],
+				"url": { "raw": "http://localhost:8000/api/v1/payments" }
+			}
+		}
+	]
+}
