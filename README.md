@@ -46,9 +46,83 @@ The system behavior is controlled via environment variables in `docker-compose.y
 
 ---
 
-## Testing API Endpoints  (Swagger UI)
 
-Go to the `http://localhost:8000/docs` use the bodies in the API Docs in the dashboard
+## 🧪 API Testing Guide (Swagger UI)
+
+Follow these steps in order at `http://localhost:8000/docs` to verify the full lifecycle of a transaction.
+
+### 1. Create a New Order
+**Endpoint:** `POST /api/v1/payments`  
+Use a unique **idempotency_key** to test request safety and prevent duplicate orders.
+```json
+{
+  "amount": 50000,
+  "currency": "INR",
+  "idempotency_key": "order_test_unique_001",
+  "notes": {
+    "item": "Evaluation Test",
+    "customer": "Gemini User"
+  }
+}
+```  
+### 2. Create a New Order
+**Endpoint:** `POST /api/v1/payments`  
+Use a unique **idempotency_key** to test request safety and prevent duplicate orders.
+```json
+{
+  "amount": 50000,
+  "currency": "INR",
+  "idempotency_key": "order_test_unique_001",
+  "notes": {
+    "item": "Evaluation Test",
+    "customer": "Gemini User"
+  }
+}
+```  
+### 3. Create Payment (SDK Simulation)
+**Endpoint:** `POST /api/v1/payments/public`  
+Replace `order_id` with the actual ID returned from Step 1 to simulate the frontend payment flow.
+
+```json
+{
+  "amount": 50000,
+  "currency": "INR",
+  "payment_method": "card",
+  "order_id": "PASTE_ORDER_ID_HERE"
+}
+```  
+### 4. Capture Payment
+**Endpoint:** `POST /api/v1/payments/{payment_id}/capture`  
+Finalizes the transaction status. Use the `payment_id` generated in Step 2.
+
+**Request Body (JSON):**
+```json
+{
+  "amount": 50000
+}
+```  
+### 5. Create Asynchronous Refund
+**Endpoint:** `POST /api/v1/payments/{payment_id}/refunds`  
+Triggers a **Celery worker** job. The system simulates a **10-second delay** before processing.
+
+**Request Body (JSON):**
+```json
+{
+  "amount": 25000,
+  "speed": "normal",
+  "notes": {
+    "reason": "Task evaluation refund test"
+  }
+}
+```
+### 6. Check Refund Status
+**Endpoint:** `GET /api/v1/payments/refunds/{refund_id}`  
+Check this immediately after initiating a refund to see a `pending` status. Refresh after **10 seconds** to see the status change to `processed` once the background worker completes the task.
+
+### 7. Webhook Delivery Logs
+**Endpoint:** `GET /api/v1/payments/webhooks`  
+Use this to review the history of all outgoing notifications. You can verify the **delivery status**, **retry attempts**, and the **HMAC-SHA256 signature** sent to the merchant for each event.
+
 
 ## 🛠️ Webhook Integration Guide
 
