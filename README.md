@@ -46,6 +46,10 @@ The system behavior is controlled via environment variables in `docker-compose.y
 
 ---
 
+## Testing API Endpoints  (Swagger UI)
+
+Go to the `http://localhost:8000/docs` use the bodies in the API Docs in the dashboard
+
 ## 🛠️ Webhook Integration Guide
 
 ### Event Delivery
